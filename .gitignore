@@ -1,0 +1,4 @@
+__STORE__/
+/node_modules
+*.js
+*.d.ts

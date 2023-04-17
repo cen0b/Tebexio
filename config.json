@@ -1,0 +1,11 @@
+{
+  "commands": {
+    "link": {
+      "name": "tebexio:link",
+      "meta": "Link Tebex Store With Secret Store Token.",
+      "params": {
+        "secret": "Key Secret"
+      }
+    }
+  }
+}
