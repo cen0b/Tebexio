@@ -8,5 +8,5 @@ Good to go. :)
 
 # Author
 
-the original creator of this project was Nobu (nobu.sh)
+the original creator of this project was Nobu (nobu.sh) \n
 me (vekqi) made some small improvements but all the credits to nobu!
