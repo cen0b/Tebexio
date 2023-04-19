@@ -1,49 +1,57 @@
-import Axios, { AxiosResponse, Method } from 'axios'
-import { AbortController } from './AbortController'
-import { Agent as HTTPSAgent } from 'https'
-import { Agent as HTTPAgent } from 'http'
-import type { RestClient } from './Client'
-import type { RequestOptions } from '../types'
-import { API, USER_AGENT } from './Constants'
+import Axios, { AxiosResponse, Method } from "axios";
+import { AbortController } from "./AbortController";
+import { Agent as HTTPSAgent } from "https";
+import { Agent as HTTPAgent } from "http";
+import type { RestClient } from "./Client";
+import type { RequestOptions } from "../types";
+import { API, USER_AGENT } from "./Constants";
 
-const httpsAgent = new HTTPSAgent({ keepAlive: true })
-const httpAgent = new HTTPAgent({ keepAlive: true })
+const httpsAgent = new HTTPSAgent({ keepAlive: true });
+const httpAgent = new HTTPAgent({ keepAlive: true });
 
 export class Request {
-  protected readonly client: RestClient
-  protected readonly method: string
-  protected readonly endpoint: string
-  protected readonly options: RequestOptions
-  public constructor(client: RestClient, method: string, endpoint: string, options: RequestOptions = {}) {
-    this.client = client
-    this.method = method
-    this.endpoint = endpoint
-    this.options = options
-  }
-
-  public async make<R extends Record<any, any>>(): Promise<AxiosResponse<R, any>> {
-    const url = API + this.endpoint
-
-    let headers = {
-      ...this.options.headers,
-      'User-Agent': USER_AGENT,
-      'Content-Type': 'application/json',
+    protected readonly client: RestClient;
+    protected readonly method: Method;
+    protected readonly endpoint: string;
+    protected readonly options: RequestOptions;
+    public constructor(client: RestClient, method: Method, endpoint: string, options: RequestOptions = {}) {
+        this.client = client;
+        this.method = method;
+        this.endpoint = endpoint;
+        this.options = options;
     }
 
-    const data = this.options.data ?? {}
+    public async make<R extends Record<any, any>>(): Promise<AxiosResponse<R, any>> {
+        const url = API + this.endpoint;
 
-    if (this.options.authenticated !== false) headers = Object.assign(headers, this.client.auth)
+        const headers = {
+            ...this.options.headers,
+            "User-Agent": USER_AGENT,
+            "Content-Type": "application/json",
+        };
 
-    const controller = new AbortController()
-    const { signal } = controller
-    const timeout = setTimeout(() => controller.abort(), this.options.timeout ?? 15_000)
-    return Axios(url, {
-      method: this.method as Method,
-      headers,
-      httpsAgent,
-      httpAgent,
-      data,
-      signal
-    }).finally(() => clearTimeout(timeout))
-  }
+        const data = this.options.data ?? {};
+
+        if (this.options.authenticated !== false) {
+            Object.assign(headers, this.client.auth);
+        }
+
+        const controller = new AbortController();
+        const { signal } = controller;
+        const timeout = setTimeout(() => controller.abort(), this.options.timeout ?? 15_000);
+
+        try {
+            const response = await Axios(url, {
+                method: this.method,
+                headers,
+                httpsAgent,
+                httpAgent,
+                data,
+                signal,
+            });
+            return response;
+        } finally {
+            clearTimeout(timeout);
+        }
+    }
 }

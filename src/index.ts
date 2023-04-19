@@ -1,36 +1,30 @@
-// Imports
-import { events } from 'bdsx/event'
-import { resolve } from 'path'
-import { Store } from './database/store'
-import { StoreData } from './types'
+import { events } from "bdsx/event";
+import { resolve } from "path";
+import { Store } from "./database/store";
+import { StoreData } from "./types";
+import { init as initLink } from "./commands/link";
+import { Sweep } from "./sweep";
 
-import { init as initLink } from './commands/link'
-import { Sweep } from './sweep'
+// Define server open and close event handlers
+const handleServerOpen = async () => {
+    console.log("[plugin:Tebexio] Startup");
+    // Start the sweeper
+    sweep.start();
+    // Initialize commands
+    initLink(store, sweep);
+};
 
-// Server Open/Close Events
-events.serverOpen.on(start)
-events.serverClose.on(end)
+const handleServerClose = async () => {
+    console.log("[plugin:Tebexio] Cleanup");
+    // Stop the sweeper and save the store data
+    sweep.stop();
+    store.save();
+};
 
-// New Persistent JSON Storage
-const store = new Store<StoreData>(resolve(__dirname, '../__STORE__/a.json'))
+// Subscribe to server open and close events
+events.serverOpen.on(handleServerOpen);
+events.serverClose.on(handleServerClose);
 
-// Prepare Sweeper
-const sweep = new Sweep(store)
-
-// Server Close Cleanup Method
-async function end() {
-  console.log('[plugin:Tebexio] Cleanup')
-  sweep.stop()
-  store.save()
-}
-
-// Server Open Startup Method
-async function start() {
-  console.log('[plugin:Tebexio] Startup')
-
-  // Start Sweeper (If Feasable)
-  sweep.start()
-
-  // Init Commands
-  initLink(store, sweep)
-}
+// Set up the store and sweeper
+const store = new Store<StoreData>(resolve(__dirname, "../__STORE__/a.json"));
+const sweep = new Sweep(store);
